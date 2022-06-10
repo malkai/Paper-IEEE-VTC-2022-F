@@ -9,6 +9,6 @@ Kauã Cassino()
 
 Coordination:
 
-Paulo Nascimento(peters@ptb.de)
+Paulo Nascimento()
 
 Wilson S. Melo Jr. (wsjunior@inmetro.gov.br)
