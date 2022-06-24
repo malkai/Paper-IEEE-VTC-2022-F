@@ -42,10 +42,10 @@ function Main(props) {
         <>
             <Navbar/>
             <CardsResumo>
-              <ResumoVeiculosCard texto={'Veiculos registrados'} quantidade={totalVeiculos}/>
-              <ResumoVeiculosCard texto={'Fabricantes registrados'} quantidade={totalFabricantes}/>
-              <ResumoVeiculosCard texto={'Total de carbono emitido'} quantidade={totalCarbono}/>
-              <ResumoVeiculosCard texto={'Transações realizadas'} quantidade={totalTransacoes}/>
+              <ResumoVeiculosCard texto={'Veiculos registrados'} quantidade={totalVeiculos} id={0}/>
+              <ResumoVeiculosCard texto={'Fabricantes registrados'} quantidade={totalFabricantes} id={1}/>
+              <ResumoVeiculosCard texto={'Total de carbono emitido'} quantidade={totalCarbono} id={2}/>
+              <ResumoVeiculosCard texto={'Transações realizadas'} quantidade={totalTransacoes} id={3}/>
             </CardsResumo>
             
         </>

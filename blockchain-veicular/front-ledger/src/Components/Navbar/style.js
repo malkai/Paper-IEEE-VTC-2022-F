@@ -1,7 +1,6 @@
 import styled from 'styled-components'
 
 export const Mainbox = styled.div`
-    background-image: linear-gradient(var(--primary-color), var(--secondary-color));
 
     display: flex;
     width: 100vw;
@@ -65,6 +64,15 @@ export const Mainbox = styled.div`
         list-style-type: none;
         font-size: 1.5rem;
         font-weight: 500;
+
+        transition: 500ms;
+    }
+
+    .linha1 .links ul li:hover {
+        backface-visibility: hidden;
+        transform: scale(1.2);
+        cursor: pointer;
+        -webkit-font-smoothing: subpixel-antialiased;
     }
 
 `
