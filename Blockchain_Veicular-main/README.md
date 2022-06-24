@@ -87,11 +87,10 @@ Para instânciar o chaincode em toda a rede execute o comando:
 Vamos instalar mais algumas dependências ecessárias para executar os próximos códigos:
 
 ```console
-cd $HOME
-git clone https://github.com/hyperledger/fabric-sdk-py.git
-cd fabric-sdk-py
-git checkout tags/v0.8.0
-sudo make install
+sudo apt install python3-pip
+sudo apt-get install python-dev python3-dev libssl-dev
+pip3 install tornado
+pip3 install Flask
 ```
 
 ```console
