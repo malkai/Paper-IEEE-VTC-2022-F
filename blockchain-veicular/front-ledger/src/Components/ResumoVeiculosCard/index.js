@@ -1,33 +1,41 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Mainbox } from './style';
-import { AiFillCar } from "react-icons/ai";
-import { BsGearFill } from "react-icons/bs";
-import { FaLeaf, FaMoneyBillWaveAlt } from "react-icons/fa";
+import { CarOutline, LeafOutline, SettingsOutline, Wallet } from 'react-ionicons'
 
 
-function ResumoVeiculosCard(props) {
+export const ResumoVeiculosCard = (props) => {
     return (
         <>
-            <Mainbox>
+            <Mainbox className='bg-blue-700 border-2 border-solid rounded-3xl'>
+                {props.img === 'trans' ? <>
+                    <Wallet
+                        height='25px'
+                        width='25px'
+                    />
+                </> : ''}
+                {props.img === 'veic' ? <>
+                    <CarOutline
+                        height='25px'
+                        width='25px'
+                    />
+                </> : ''}
+                {props.img === 'carb' ? <>
+                    <LeafOutline
+                        height='25px'
+                        width='25px'
+                    />
+                </> : ''}
+                {props.img === 'fab' ? <>
+                    <SettingsOutline
+                        height='25px'
+                        width='25px'
+                    />
+                </> : ''}
                 <div className='linha1'>
-                    <div className='icon_text'>
-                        {props.id === 0 ? 
-                        <AiFillCar size={25}/> : ''}
-                        {props.id === 1 ? 
-                        <BsGearFill size={25}/> : ''}
-                        {props.id === 2 ? 
-                        <FaLeaf size={25}/> : ''}
-                        {props.id === 3 ? 
-                        <FaMoneyBillWaveAlt size={25}/> : ''}
-                        <p>{props.texto}</p>
-                    </div>
-                    <div className='numero'>
-                        <p>{props.quantidade}</p>
-                    </div>
+                    <p>{props.texto}</p>
+                    <p>{props.quantidade}</p>
                 </div>
             </Mainbox>
         </>
     );
 }
-
-export default ResumoVeiculosCard;

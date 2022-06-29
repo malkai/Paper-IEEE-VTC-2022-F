@@ -1,78 +1,41 @@
 import styled from 'styled-components'
 
 export const Mainbox = styled.div`
-
     display: flex;
+
     width: 100vw;
-    height: 4.7em;
+    height: 50px;
+`
 
-    .linha1 {
-        height: 100%;
-        width: 100%;
+export const LogoBox = styled.div`
+    display: flex;
 
+    width: 20%;
+    height: 100%;
+    padding-left: 10px;
+`
+
+export const LinksBox = styled.div`
+    display: flex;
+    width: 80%;
+    height: 100%;
+
+    align-items: center;
+    justify-content: center;
+
+    ul {
         display: flex;
-
-        justify-content: space-between;
-        align-items: center;
+        gap: 30px;
+        padding-right: 35em;
     }
 
-    .linha1 .logo {
-
-        display: flex;
-        flex-direction: row;
-
-        justify-content: center;
-        align-items: center;
-
-        margin: 1.5em;
-        gap: 1.5em;
+    ul li span {
+        font-size: 17px;
     }
 
-    .linha1 .logo p {
-        font-size: 1.7rem;
-        font-weight: 600;
-    }
-
-    .linha1 .logo img {
-        width: 30px;
-        height: 30px;
-    }
-
-    .linha1 .links {
-        display: flex;
-
-        width: 40em;
-
-        justify-content: space-between;
-    }
-
-    .linha1 .links ul {
-        display: flex;
-
-        width: 100%;
-        
-        flex-direction: row;
-        justify-content: space-around;
-    }
-
-    .linha1 .links ul li{
-        border: 1px solid black;
-        border-radius: 25px;
-
-        padding: 0.5rem;
-
-        list-style-type: none;
-        font-size: 1.5rem;
-        font-weight: 500;
-
-        transition: 500ms;
-    }
-
-    .linha1 .links ul li:hover {
-        backface-visibility: hidden;
-        transform: scale(1.2);
+    ul li span:hover {
+        color: white;
         cursor: pointer;
-        -webkit-font-smoothing: subpixel-antialiased;
     }
 
 `

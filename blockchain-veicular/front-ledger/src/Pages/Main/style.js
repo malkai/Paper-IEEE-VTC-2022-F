@@ -8,6 +8,15 @@ export const CardsResumo = styled.div`
     justify-content: center;
     align-items: center;
 
-    margin: 3em;
     gap: 5em;
-`;
+
+`
+
+export const MainBox = styled.div`
+    background-color: #1e40af;
+
+    width: 100vw;
+    height: 100vh;
+
+    padding-top: 5em;
+`
