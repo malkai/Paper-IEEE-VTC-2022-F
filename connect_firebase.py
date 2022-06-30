@@ -18,8 +18,9 @@ def getDoc():
 	
 	usersref = connect_fire.collection(u'dataPoints')
 	docs = usersref.stream()
-	for doc in docs:
-    		print('{} : {}'.format(doc.id,doc.to_dict()))
+	return docs
+
+
 
 #this two lines setup credential on Database
 cred_obj = firebase_admin.credentials.Certificate('.env/paper-ieee-vtc-2022-firebase-adminsdk-t36ql-4f5d60dca7.json')
