@@ -1,12 +1,13 @@
 import json
-
+from subprocess import check_output
 import connect_firebase
+from vehicle import Vehicle
 
-n_leituras = 0
-
+'''
 # Speed density:
 def calc_co2_speed( RPM, Pressure_intake, Temp_intake):
     
+
     density_gasoline = 737  # Density of gasoline 737g/L
     density_diesel = 850  # Density of diesel 737g/L
     density_ethanol = 789  # Density of ethanol 737g/L
@@ -19,32 +20,38 @@ def calc_co2_speed( RPM, Pressure_intake, Temp_intake):
     AFR_diesel = 14.6  # AFR constant for diesel
     AFR_ethanol = 9.1  # AFR constant for ethanol
     
+    #Vintake represents the real volume of intake air supported by the cylinders.
+    Vintake = 400#!!!!!!!!valor chutado
    
-    vol_entrada = 400#!!!!!!!!valor chutado
-    vol_nominal = 500#!!!!!!!!valor chutado
+    #Vnominal is the theoretical volume of the engine.
+    Vnominal = 500#!!!!!!!!valor chutado
     
-    Mol_ar = 28.96 #massa molar do ar
+    mass_air = 28.96 #massa molar do ar
     
-    #Equation (4) ? (5)
-    eficenc_volumetrica = vol_entrada/vol_nominal
+    #Equation (12)
+    #On the article the value volumetric eficiency
+    volumetric_efficiency = 0.8
+    
+    #the volume of the combustion chambers in the engine cylinders
+    V = 50
+    #the ideal gas constant J/ (mol*k)
+    R = 8.3145 
 
-    V = 50 #the volume of the combustion chambers in the engine cylinders
-   
-    R = 8.3145 #the ideal gas constant J/ (mol*k)
-
-
+    #Pressure_intake represents the pressure in the combustion chamber and can be obtained by means of the MAP (Manifold Absolute Pressure) sensor in KPa.
+    #Temp_intake T is the gas temperature. It can be obtained by the IAT (Intake Absolute Temperature) sensor in K.
+    
     #Equation (14)
-    massa_de_fluxo_de_ar = (Pressure_intake*V/(R*Temp_intake))*(Mol_ar*eficenc_volumetrica*RPM/120)
+    mass_of_air_flow = (Pressure_intake*V/(R*Temp_intake))*(mass_air*volumetric_efficiency*RPM/120)
 
 
     #Equation (6)
-    massa_co2 = massa_de_fluxo_de_ar*co2_per_gasoline/(AFR_gasoline*density_gasoline)
+    mass_co2 = mass_of_air_flow*co2_per_gasoline/(AFR_gasoline*density_gasoline)
     
-    return massa_co2
-
+    return mass_co2
+'''
 
 #Mass air Flow
-def calc_co2(massa_de_ar):
+def calc_co2(air_mass):
     density_gasoline = 737  # Density of gasoline 737g/L
     density_diesel = 850  # Density of diesel 737g/L
     density_ethanol = 789  # Density of ethanol 737g/L
@@ -57,42 +64,108 @@ def calc_co2(massa_de_ar):
     AFR_diesel = 14.6  # AFR constant for diesel
     AFR_ethanol = 9.1  # AFR constant for ethanol
     
-    massa_combustivel = massa_de_ar / AFR_gasoline
+    mass_fuel = air_mass / AFR_gasoline
     
-    massa_co2_p_l = massa_de_ar * co2_per_gasoline/(AFR_gasoline*density_gasoline)
+    #Equation (6)
+    massa_co2_p_l = air_mass * co2_per_gasoline/(AFR_gasoline*density_gasoline)
     return massa_co2_p_l
     
 def to_dict(obj):
     return json.loads(json.dumps(obj, default=lambda o: o.__dict__))
 
 
+def validate (x):
+    if x and x.strip():
+        #myString is not None AND myString is not empty or blank
+        return True
+    #myString is None OR myString is empty or blank
+    return False
+
 alldata =  {}
+y = []
+var_vali = True 
 
 alldata = connect_firebase.getDoc()
 
-#for doc in alldata:
-    		#print('{} : {}'.format(doc.id,doc.to_dict()))
 
-x = {doc.id: doc.to_dict() for doc in alldata}
-#print(x)
-json_object = json.dumps(x, indent = 4) 
-print(json_object)
-#print(y.to_dict()) 
-#print(y.id,y.to_dict())
-#for doc in x:
-#    		print('{} : {}'.format(doc.id,doc.to_dict()))
-#print(list(enumerate(alldata)))
+for doc in alldata:
+        calc_1 = 0
+        calc_2 = 0
+        x = '' 
+        velocity = ''
+        kPa = ''
+        temp_air = '' 
+        MAF_var = ''
+        RPM_var = ''
+        vin = ''
+        id = doc.id
+        #print('')
+       
+        #print(var_vali)
+        
+        try:
+            velocity = doc.get('obdData.`01 0D`.response')
+        except:          
+            var_vali = False
+            #print("Not found velocity")
+        
+        var_vali = validate(velocity)
+       
 
-#docs_dict = {doc.id:doc.to_dict() for doc in alldata}   
-# print dictionary keys         
+        try:
+            kPa = doc.get('obdData.`01 0B`.response')  
+        except:
+            var_vali = False
+            #print("Not found kPa")   
+        
+        var_vali = validate(kPa)
+        
 
-#def calculate_carbon_emissions():
-    #for i in range(n_leituras):
-        #co2_m1 = calc_co2_speed(measures["RPM"][i],measures["INTAKE_PRESSURE"][i],measures["INTAKE_TEMP"][i])
-        #print(co2_m1)
+        try:
+            temp_air = doc.get('obdData.`01 0F`.response')
+        except:           
+            var_vali = False
+            #print("Not found temperature air")  
+        
+        var_vali = validate(temp_air)
+        
+
+        try:
+            MAF_var = doc.get('obdData.`01 10`.response')
+            
+        except:
+            var_vali = False
+            #print("Not found MAF")
+     
+        var_vali = validate(MAF_var)
+      
+        try:
+            RPM_var = doc.get('obdData.`01 0C`.response')
+            
+        except:
+            var_vali = False
+            #print("Not found RPM") 
+        
+        var_vali = validate(RPM_var)
+        
+        try:
+            vin = doc.get('obdData.`09 02 5`.response')
+            
+        except:
+            var_vali = False
+            #print("Not found RPM") 
+        
+        var_vali = validate(vin)            
+       
+        if(var_vali == True and MAF_var!=''and MAF_var!=0):
+
+            calc_2 = calc_co2(float(MAF_var))
+        
+        
+        var_vali = True 
+        if(calc_2!=0):
+            aux_carro = Vehicle(vin,id,calc_2,velocity)
+            y.append(aux_carro)
 
 
-  
-    #for i in range(n_leituras):
-        #co2_m2 = calc_co2(measures["MAF"][i])
-        #print(co2_m2)
+#connect_firebase.change_flag(y)        
