@@ -1,9 +1,11 @@
 import json
 from subprocess import check_output
+from Requestinformation import post_information
 import connect_firebase
 from vehicle import Vehicle
 
-'''
+
+#in this function we only acknowledge gasoline for make the math
 # Speed density:
 def calc_co2_speed( RPM, Pressure_intake, Temp_intake):
     
@@ -21,10 +23,10 @@ def calc_co2_speed( RPM, Pressure_intake, Temp_intake):
     AFR_ethanol = 9.1  # AFR constant for ethanol
     
     #Vintake represents the real volume of intake air supported by the cylinders.
-    Vintake = 400#!!!!!!!!valor chutado
+    Vintake = 400#
    
     #Vnominal is the theoretical volume of the engine.
-    Vnominal = 500#!!!!!!!!valor chutado
+    Vnominal = 500#
     
     mass_air = 28.96 #massa molar do ar
     
@@ -41,14 +43,14 @@ def calc_co2_speed( RPM, Pressure_intake, Temp_intake):
     #Temp_intake T is the gas temperature. It can be obtained by the IAT (Intake Absolute Temperature) sensor in K.
     
     #Equation (14)
-    mass_of_air_flow = (Pressure_intake*V/(R*Temp_intake))*(mass_air*volumetric_efficiency*RPM/120)
+    mass_of_air_flow = (Pressure_intake*V/(1000*R*Temp_intake))*(mass_air*volumetric_efficiency*RPM/120)
 
 
     #Equation (6)
-    mass_co2 = mass_of_air_flow*co2_per_gasoline/(AFR_gasoline*density_gasoline)
+    mass_co2 = mass_of_air_flow/(AFR_gasoline*density_gasoline)*co2_per_gasoline
     
     return mass_co2
-'''
+
 
 #Mass air Flow
 def calc_co2(air_mass):
@@ -67,8 +69,8 @@ def calc_co2(air_mass):
     mass_fuel = air_mass / AFR_gasoline
     
     #Equation (6)
-    massa_co2_p_l = air_mass * co2_per_gasoline/(AFR_gasoline*density_gasoline)
-    return massa_co2_p_l
+    mass_co2_p_l = air_mass/(AFR_gasoline*density_gasoline) * co2_per_gasoline
+    return mass_co2_p_l
     
 def to_dict(obj):
     return json.loads(json.dumps(obj, default=lambda o: o.__dict__))
@@ -89,6 +91,7 @@ alldata = connect_firebase.getDoc()
 
 
 for doc in alldata:
+       
         calc_1 = 0
         calc_2 = 0
         x = '' 
@@ -103,6 +106,9 @@ for doc in alldata:
        
         #print(var_vali)
         
+       
+
+          
         try:
             velocity = doc.get('obdData.`01 0D`.response')
         except:          
@@ -118,9 +124,7 @@ for doc in alldata:
             var_vali = False
             #print("Not found kPa")   
         
-        var_vali = validate(kPa)
-        
-
+        var_vali = validate(kPa)      
         try:
             temp_air = doc.get('obdData.`01 0F`.response')
         except:           
@@ -128,17 +132,8 @@ for doc in alldata:
             #print("Not found temperature air")  
         
         var_vali = validate(temp_air)
-        
 
-        try:
-            MAF_var = doc.get('obdData.`01 10`.response')
-            
-        except:
-            var_vali = False
-            #print("Not found MAF")
-     
-        var_vali = validate(MAF_var)
-      
+        
         try:
             RPM_var = doc.get('obdData.`01 0C`.response')
             
@@ -153,19 +148,40 @@ for doc in alldata:
             
         except:
             var_vali = False
-            #print("Not found RPM") 
+            #print("Not found vin") 
         
         var_vali = validate(vin)            
-       
-        if(var_vali == True and MAF_var!=''and MAF_var!=0):
-
-            calc_2 = calc_co2(float(MAF_var))
+               
         
         
+        '''
+        try:
+            MAF_var = doc.get('obdData.`01 10`.response')
+            
+        except:
+            var_vali = False
+            print("Not found MAF")
+        
+        var_vali = validate(MAF_var)
+        '''
+      
+        try:
+           calc_1 = calc_co2_speed(float(RPM_var),float(kPa),float(temp_air))
+            
+        except:
+            print("print erro")          
+        #if(var_vali == True):
+            #calc_2 = calc_co2(float(MAF_var))
+            #print(calc_1)
         var_vali = True 
-        if(calc_2!=0):
-            aux_carro = Vehicle(vin,id,calc_2,velocity)
+
+        if(calc_1!=0):
+            aux_carro = Vehicle(vin,id,calc_1)
             y.append(aux_carro)
 
 
+
+for doc in y:
+    print(doc.vin,doc.hash,doc.co2)
+#post_information(y)
 #connect_firebase.change_flag(y)        

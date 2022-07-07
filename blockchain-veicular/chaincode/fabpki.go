@@ -2,8 +2,8 @@
 //    THE BLOCKCHAIN PKI EXPERIMENT     ////
 ///////////////////////////////////////////
 /*
-	This is the fabpki, a chaincode that implements a Public Key Infrastructure (PKI)
-	for measuring instruments. It runs in Hyperledger Fabric 1.4.
+	This is the manupki, a chaincode that implements a Public Key Infrastructure (PKI)
+	for measuring instruments. It runs in Hyperledger manuric 1.4.
 	He was created as part of the PKI Experiment. You can invoke its methods
 	to store measuring instruments public keys in the ledger, and also to verify
 	digital signatures that are supposed to come from these instruments.
@@ -21,13 +21,13 @@ import (
 	"math/rand"
 	"strconv"
 
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	sc "github.com/hyperledger/fabric/protos/peer"
+	"github.com/hyperledger/manuric/core/chaincode/shim"
+	sc "github.com/hyperledger/manuric/protos/peer"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890") //Criar sequencia de letras
 
-func AleatString(n int) string { //Função para criar uma sequencia de números aleatórios
+func AleatString(n int) string { //Function to create a sequence of random numbers
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
@@ -35,42 +35,41 @@ func AleatString(n int) string { //Função para criar uma sequencia de números
 	return string(b)
 }
 
-func Encode(msg string) string { //Função para criar um hash sha-1
+func Encode(msg string) string { //Function to create a sha-1 hash
 	h := sha1.New()
 	h.Write([]byte(msg))
 	sha1_hash := hex.EncodeToString(h.Sum(nil))
 	return sha1_hash
 }
 
-func Arredondar(n float64) float64 {
-	numeroArredondado := float64(int(n*10000)) / 10000
-	return numeroArredondado
+func Round(n float64) float64 {
+	numberRounded := float64(int(n*10000)) / 10000
+	return numberRounded
 }
 
-type SmartContract struct {
+type smartContract struct {
 }
 
-type Veiculo struct { //"user-"
+type vehicle struct { //"user-"
 	Hash       string  `json:"Hash"`
 	VIN        string  `json:"VIN"`
-	Co2Emitido float64 `json:"Co2Emitido"`
-	Fabricante string  `json:"Fabricante"`
+	Co2Emitted float64 `json:"Co2Emitted"`
+	manufacturer string  `json:"Manufacturer"`
 }
 
-type Fabricante struct { //"fab-""
+type manufacturer struct { //"manu-""
 	Co2Tot          float64 `json:"Co2_Tot"`
-	SaldoCarbono    float64 `json:"SaldoCarbono"`
-	SaldoFiduciario float64 `json:"Saldo_Fiduciario"`
+	CarbonBalance    float64 `json:"CarbonBalance"`
+	Balance_Fiduciary float64 `json:"Balance_Fiduciary"`
 }
 
-type OrdemTransacao struct { //"trans-"
-	ProprietarioOrdem string  `json:"ProprietarioOrdem"` // FK (Veiculo)
-	TipoTransacao     string  `json:"TipoTransacao"`     // 1: Vender carbono -- 2: Comprar carbono
-	SaldoOfertado     float64 `json:"SaldoOfertado"`
-	IdComprador       string  `json:"IdComprador"`
-	ValorUltimoLance  float64 `json:"ValorUltimoLance"`
-	StatusOrdem       string  `json:"StatusOrdem"` // Recente - Andamento - Fechado
-}
+type transactionOrder struct { //"trans-"
+	OwnerOrder string  `json:"OwnerOrder"` // FK (Vehicle)
+	TransactionType     string  `json:"TransactionType"`     // 1: Sell carbon -- 2: Buy carbon
+	BalanceOffered     float64 `json:"BalanceOffered"`
+	BuyerID       string  `json:"BuyerID"`
+	AmountLastBid  float64 `json:"AmountLastBid"`
+	StatusOrder       string  `json:"StatusOrder"` //Recent - Progress - Closed
 
 func (s *SmartContract) Init(stub shim.ChaincodeStubInterface) sc.Response {
 	return shim.Success(nil)
@@ -79,354 +78,352 @@ func (s *SmartContract) Init(stub shim.ChaincodeStubInterface) sc.Response {
 func (s *SmartContract) Invoke(stub shim.ChaincodeStubInterface) sc.Response {
 	fn, args := stub.GetFunctionAndParameters()
 
-	if fn == "registrarVeiculo" {
-		return s.registrarVeiculo(stub, args)
-	} else if fn == "registrarFabricante" {
-		return s.registrarFabricante(stub, args)
-	} else if fn == "registrarCredito" {
-		return s.registrarCredito(stub, args)
-	} else if fn == "anunciarOrdem" {
-		return s.anunciarOrdem(stub, args)
-	} else if fn == "ordemLance" {
-		return s.ordemLance(stub, args)
-	} else if fn == "fecharOrdem" {
-		return s.fecharOrdem(stub, args)
+	if fn == "registerVehicle" {
+		return s.registerVehicle(stub, args)
+	} else if fn == "registerManufacturer" {
+		return s.registerManufacturer(stub, args)
+	} else if fn == "registerCredit" {
+		return s.registerCredit(stub, args)
+	} else if fn == "announceOrder" {
+		return s.announceOrder(stub, args)
+	} else if fn == "bidOrder" {
+		return s.bidOrder(stub, args)
+	} else if fn == "closeOrder" {
+		return s.closeOrder(stub, args)
 	}
-
-	return shim.Error("Chaincode não suporta essa função.")
+	idOrder
+	return shim.Error("Chaincode does not support this function")
 }
 
-func (s *SmartContract) registrarFabricante(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) registerManufacturer(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 1 {
-		return shim.Error("Era esperado 1 único argumento... Tente novamente!")
+		return shim.Error("1 single argument was expected")
 	}
 
-	nomeFab := args[0]
+	nameManu := args[0]
 
-	fabricanteInfor := Fabricante{
+	manufacturerInfor := manufacturer{
 		Co2Tot:          0.0,
-		SaldoCarbono:    0.0,
-		SaldoFiduciario: 100000.0,
+		CarbonBalance:    0.0,
+		Balance_Fiduciary: 100000.0,
 	}
 
-	fabricanteAsBytes, _ := json.Marshal(fabricanteInfor)
+	manufacturerAsBytes, _ := json.Marshal(manufacturerInfor)
 
-	idCdgLedger := "fab-" + nomeFab
+	idCdgLedger := "manu-" + nameManu
 
-	stub.PutState(idCdgLedger, fabricanteAsBytes)
+	stub.PutState(idCdgLedger, manufacturerAsBytes)
 
-	fmt.Println("Sucesso ao registrar fabricantes")
+	fmt.Println("Success in registering manufacturers")
 	return shim.Success(nil)
 }
 
-func (s *SmartContract) registrarVeiculo(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) registerVehicle(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 4 {
-		return shim.Error("Eram esperados 4 argumentos... Tente novamente!")
+		return shim.Error("4 arguments were expected... Try again!")
 	}
 
 	vim := args[0]
 	hash := args[1]
 	co2 := args[2]
-	fabNome := args[3]
+	ManuName := args[3]
 
-	co2VeicFloat, err := strconv.ParseFloat(co2, 64)
+	co2VehiFloat, err := strconv.ParseFloat(co2, 64)
 
-	//Criar Struct para manipular as informações do veículo
-	userVeiculo := Veiculo{
+	//Create Struct to manipulate vehicle information
+	userVehicle := Vehicle{
 		Hash:       hash,
 		VIN:        vim,
-		Co2Emitido: co2VeicFloat,
-		Fabricante: fabNome,
+		Co2Emitted: co2VehiFloat,
+		manufacturer: ManuName,
 	}
 
-	//Recuperando dados do usuário
-	fabricanteAsBytes, err := stub.GetState(("fab-" + fabNome))
-	if err != nil || fabricanteAsBytes == nil {
-
-		fabricanteInfor := Fabricante{
+	//Retrieving user data
+	manufacturerAsBytes, err := stub.GetStidOrder
+		manufacturerInfor := manufacturer{
 			Co2Tot:          0.0,
-			SaldoCarbono:    0.0,
-			SaldoFiduciario: 100000.0,
+			CarbonBalance:    0.0,
+			Balance_Fiduciary: 100000.0,
 		}
 
-		fabricanteInfor.Co2Tot += co2VeicFloat
+		manufacturerInfor.Co2Tot += co2VehiFloat
 
-		veiculoAsBytes, _ := json.Marshal(userVeiculo)
-		fabricanteAsBytes, _ = json.Marshal(fabricanteInfor)
+		VehicleAsBytes, _ := json.Marshal(userVehicle)
+		manufacturerAsBytes, _ = json.Marshal(manufacturerInfor)
 
-		stub.PutState(("fab-" + fabNome), fabricanteAsBytes)
-		stub.PutState(("veic-" + vim), veiculoAsBytes)
+		stub.PutState(("manu-" + ManuName), manufacturerAsBytes)
+		stub.PutState(("Vehi-" + vim), VehicleAsBytes)
 
-		fmt.Println("Sucesso ao registrar veiculo e fabricante")
+		fmt.Println("Success in registering Vehicle and manufacturer")
 		return shim.Success(nil)
 
 	}
 
-	//Criando Struct para encapsular os dados do veiculo
-	fabricante := Fabricante{}
-	json.Unmarshal(fabricanteAsBytes, &fabricante)
+	//Criando Struct para encapsular os dados do Vehicle
+	manufacturer := manufacturer{}
+	json.Unmarshal(manufacturerAsBytes, &manufacturer)
+	idOrder
+	manufacturer.Co2Tot += co2VehiFloat
 
-	fabricante.Co2Tot += co2VeicFloat
+	VehicleAsBytes, _ := json.Marshal(userVehicle)
+	manufacturerAsBytes, _ = json.Marshal(manufacturer)
 
-	veiculoAsBytes, _ := json.Marshal(userVeiculo)
-	fabricanteAsBytes, _ = json.Marshal(fabricante)
+	stub.PutState(("manu-" + ManuName), manufacturerAsBytes)
+	stub.PutState(("Vehi-" + vim), VehicleAsBytes)
 
-	stub.PutState(("fab-" + fabNome), fabricanteAsBytes)
-	stub.PutState(("veic-" + vim), veiculoAsBytes)
-
-	fmt.Println("Sucesso ao registrar veiculo")
+	fmt.Println("Success registering Vehicle")
 	return shim.Success(nil)
 }
 
-func (s *SmartContract) registrarCredito(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) registerCredit(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 1 {
-		return shim.Error("Era esperado 1 único argumento... Tente novamente!")
+		return shim.Error("1 single argument was expected... Try again!")
 	}
 
-	idFabricante := args[0]
+	idmanufacturer := args[0]
 
-	//Recuperando dados do usuário
-	fabricanteAsBytes, err := stub.GetState(idFabricante)
-	if err != nil || fabricanteAsBytes == nil {
-		return shim.Error("Seu fabricante não existe.")
+	//Retrieving user data
+	manufacturerAsBytes, err := stub.GetState(idmanufacturer)
+	if err != nil || manufacturerAsBytes == nil {
+		return shim.Error("Your manufacturer does not exist.")
 	}
 
-	//Criando Struct para encapsular os dados do veiculo
-	fabricante := Fabricante{}
-	json.Unmarshal(fabricanteAsBytes, &fabricante)
+	//Criando Struct para encapsular os dados do Vehicle
+	manufacturer := manufacturer{}
+	json.Unmarshal(manufacturerAsBytes, &manufacturer)
 
-	if fabricante.Co2Tot == 0.0 {
-		fmt.Println("Não foi computado emissão de carbono para o fabricante: " + idFabricante)
+	if manufacturer.Co2Tot == 0.0 {
+		fmt.Println("No carbon emission was computed for the manufacturer: " + idmanufacturer)
 		return shim.Success(nil)
 	}
 
-	var saldo = 50000.0 - fabricante.Co2Tot
-	fabricante.SaldoCarbono = saldo
-	fabricante.Co2Tot = 0.0
+	var saldo = 50000.0 - manufacturer.Co2Tot
+	manufacturer.CarbonBalance = saldo
+	manufacturer.Co2Tot = 0.0
 
-	fabricanteAsBytes, _ = json.Marshal(fabricante)
+	manufacturerAsBytes, _ = json.Marshal(manufacturer)
 
-	stub.PutState(idFabricante, fabricanteAsBytes)
+	stub.PutState(idmanufacturer, manufacturerAsBytes)
 
-	fmt.Println("Saldo de carbono computado com sucesso: " + idFabricante)
+	fmt.Println("Successfully computed carbon balance: " + idmanufacturer)
 	return shim.Success(nil)
 }
 
-func (s *SmartContract) anunciarOrdem(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) announceOrder(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 3 {
-		fmt.Println("Eram esperados 3 arugmentos")
-		return shim.Error("Era esperado 3 argumentos... Tente novamente!")
+		fmt.Println("3 arguments were expected")
+		return shim.Error("3 arguments were expected... Try again!")
 	}
 
-	proprietarioOrdem := args[0]
-	tipoTransacao := args[1]
-	saldoOferta := args[2]
+	ownerOrder := args[0]
+	TransactionType := args[1]
+	Offerbalance := args[2]
 
-	saldoOfertaFloat, err := strconv.ParseFloat(saldoOferta, 64)
+	balanceOfferFloat, err := strconv.ParseFloat(Offerbalance, 64)
 
-	//Verificando se o fabricante realmente existe
-	fabricanteAsBytes, err := stub.GetState(proprietarioOrdem)
-	if err != nil || fabricanteAsBytes == nil {
-		fmt.Println("Seu fabricante não existe")
-		return shim.Error("Seu fabricante não existe.")
+	//Checking if the manufacturer really exists
+	manufacturerAsBytes, err := stub.GetState(ownerOrder)
+	if err != nil || manufacturerAsBytes == nil {
+		fmt.Println("Your manufacturer does not exist")
+		return shim.Error("Your manufacturer does not exist.")
 	}
 
-	//Criando Struct para encapsular os dados do fabricante
-	fabricante := Fabricante{}
-	json.Unmarshal(fabricanteAsBytes, &fabricante)
+	//Creating Struct to encapsulate manufacturer data
+	manufacturer := manufacturer{}
+	json.Unmarshal(manufacturerAsBytes, &manufacturer)
 
-	if tipoTransacao == "vender" {
-		if saldoOfertaFloat > fabricante.SaldoCarbono {
-			fmt.Println("Você não tem saldo de carbono suficiente")
-			return shim.Error("Você não tem saldo de carbono suficiente")
+	if TransactionType == "sell manufacturer does not exist" {
+		if balanceOfferFloat > manufacturer.CarbonBalance {
+			fmt.Println("You don't have enough carbon balance")
+			return shim.Error("You don't have enough carbon balance")
 		}
-		fabricante.SaldoCarbono -= saldoOfertaFloat
+		manufacturer.CarbonBalance -= balanceOfferFloat
 	}
 
-	if tipoTransacao == "comprar" {
-		if saldoOfertaFloat > fabricante.SaldoFiduciario {
-			fmt.Println("VocÊ não tem saldo fiduciario suficiente")
-			return shim.Error("Você não tem saldo fiduciario suficiente")
+	if TransactionType == "Buy" {
+		if balanceOfferFloat > manufacturer.Balance_Fiduciary {
+			fmt.Println("You don't have enough trust balance")
+			return shim.Error("You don't have enough trust balance")
 		}
-		fabricante.SaldoFiduciario -= saldoOfertaFloat
+		manufacturer.Balance_Fiduciary -= balanceOfferFloat
 	}
 
-	ordemVenda := OrdemTransacao{
-		IdComprador:       "null",
-		ValorUltimoLance:  0.0,
-		StatusOrdem:       "Recente",
-		ProprietarioOrdem: proprietarioOrdem,
-		SaldoOfertado:     saldoOfertaFloat,
-		TipoTransacao:     tipoTransacao,
+	salesOrder := orderTransacao{
+		BuyerID:       "null",
+		AmountLastBid:  0.0,
+		StatusOrder:       "Recent",
+		ownerOrder: ownerOrder,
+		BalanceOffered:     balanceOfferFloat,
+		TransactionType:     TransactionType,
 	}
 
-	ordemVendaAsBytes, _ := json.Marshal(ordemVenda)
-	fabricanteAsBytes, _ = json.Marshal(fabricante)
+	salesOrderAsBytes, _ := json.Marshal(salesOrder)
+	manufacturerAsBytes, _ = json.Marshal(manufacturer)
 
-	idOrdem := "trans-" + Encode(AleatString(10))
+	idOrder := "trans-" + Encode(AleatString(10))
 
-	stub.PutState(proprietarioOrdem, fabricanteAsBytes)
-	stub.PutState(idOrdem, ordemVendaAsBytes)
+	stub.PutState(ownerOrder, manufacturerAsBytes)
+	stub.PutState(idOrder, salesOrderAsBytes)
 
-	fmt.Println("Ordem de " + tipoTransacao + " anunciado com sucesso!")
+	fmt.Println("order of " + TransactionType + " successfully announced!")
 	return shim.Success(nil)
 }
 
-func (s *SmartContract) ordemLance(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) bidOrder(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 3 {
-		fmt.Println("Eram esperados 2 argumentos")
+		fmt.Println("2 arguments were expected")
 		return shim.Error("Era esperado 2 argumentos... Tente novamente!")
 	}
 
-	idTransacao := args[0]
+	idTransaction := args[0]
 	valorLance := args[1]
-	idComprador := args[2]
+	BuyerID := args[2]
 
-	valorLanceFloat, err := strconv.ParseFloat(valorLance, 64)
+	valueLanceFloat, err := strconv.ParseFloat(valorLance, 64)
 
-	//Recuperando dados da transação
-	ordemTransacaoAsBytes, err := stub.GetState(idTransacao)
-	if err != nil || ordemTransacaoAsBytes == nil {
-		fmt.Println("Seu proprietario nao existe")
-		return shim.Error("Seu proprietário não existe.")
+	//Retrieving transaction data
+	OrderTransactionAsBytes, err := stub.GetState(idTransaction)
+	if err != nil || OrderTransactionAsBytes == nil {
+		fmt.Println("Your owner does not exist")
+		return shim.Error("Your owner does not exist.")
 	}
 
-	//Recuperando dados do proprietário
-	fabricanteAsBytes, err := stub.GetState(idComprador)
-	if err != nil || ordemTransacaoAsBytes == nil {
-		fmt.Println("Seu fabricante nao existe")
-		return shim.Error("Seu fabricante não existe.")
+	//Retrieving owner data
+	manufacturerAsBytes, err := stub.GetState(BuyerID)
+	if err != nil || OrderTransactionAsBytes == nil {
+		fmt.Println("Your manufacturer does not exist")
+		return shim.Error("Your manufacturer does not exist.")
 	}
 
-	//Encapsulando os dados da ordem de transação e do fabricante
-	ordem := OrdemTransacao{}
-	json.Unmarshal(ordemTransacaoAsBytes, &ordem)
+	//Encapsulating transaction order and manufacturer data
+	order := orderTransacao{}
+	json.Unmarshal(OrderTransactionAsBytes, &order)
 
-	if ordem.StatusOrdem == "Fechado" {
-		fmt.Println("Essa ordem está fechada")
-		return shim.Error("Essa ordem não pode mais ser movimentado pois o proprietário à fechou.")
+	if order.StatusOrder == "Closed" {
+		fmt.Println("This order is closed")
+		return shim.Error("This order can no longer be moved as the owner has closed it.")
 	}
 
-	if idComprador == ordem.IdComprador {
-		fmt.Println("Você não pode efetuar um lance duas vezes")
+	if BuyerID == order.BuyerID {
+		fmt.Println("You cannot bid twice")
 	}
 
-	fabricante := Fabricante{}
-	json.Unmarshal(fabricanteAsBytes, &fabricante)
+	manufacturer := manufacturer{}
+	json.Unmarshal(manufacturerAsBytes, &manufacturer)
 
-	if valorLanceFloat > fabricante.SaldoFiduciario && ordem.TipoTransacao == "vender" {
-		fmt.Println("Voce nao tem saldo fiduciario suficiente")
-		return shim.Error("Você não tem saldo fiduciario suficiente.")
+	if valueLanceFloat > manufacturer.Balance_Fiduciary && order.TransactionType == "sell manufacturer does not exist" {
+		fmt.Println("You don't have enough trust balance")
+		return shim.Error("You don't have enough trust balance.")
 	}
 
-	if valorLanceFloat > fabricante.SaldoCarbono && ordem.TipoTransacao == "comprar" {
-		fmt.Println("Você nao tem saldo de carbono suficiente")
-		return shim.Error("Você não tem saldo de carbono suficiente.")
+	if valueLanceFloat > manufacturer.CarbonBalance && order.TransactionType == "buy" {
+		fmt.Println("You don't have enough carbon balance")
+		return shim.Error("You don't have enough carbon balance.")
 	}
 
-	if ordem.ValorUltimoLance > valorLanceFloat {
-		fmt.Println("Seu lance é menor do que o lance anterior")
-		return shim.Error("Seu lance é menor do que o lance anterior.")
+	if order.AmountLastBid > valueLanceFloat {
+		fmt.Println("Your bid is lower than the previous bid")
+		return shim.Error("Your bid is lower than the previous bid.")
 	}
 
-	ordem.StatusOrdem = "Andamento"
-	ordem.ValorUltimoLance = valorLanceFloat
-	ordem.IdComprador = idComprador
+	order.StatusOrder = "Progress"
+	order.AmountLastBid = valueLanceFloat
+	order.BuyerID = BuyerID
 
-	ordemTransacaoAsBytes, _ = json.Marshal(ordem)
-	stub.PutState(idTransacao, ordemTransacaoAsBytes)
+	OrderTransactionAsBytes, _ = json.Marshal(order)
+	stub.PutState(idTransaction, OrderTransactionAsBytes)
 
-	fmt.Println("Lance registrado no sucesso")
+	fmt.Println("Successful bid registered")
 
 	return shim.Success(nil)
 }
 
-func (s *SmartContract) fecharOrdem(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) closeOrder(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 2 {
-		fmt.Println("Eram esperados 2 argumentos")
-		return shim.Error("Era esperado 2 argumentos... Tente novamente!")
+		fmt.Println("2 arguments were expected")
+		return shim.Error("2 arguments were expected... Try again!")
 	}
 
-	idTransacao := args[0]
-	idProprietario := args[1]
+	idTransaction := args[0]
+	ownerid := args[1]
 
-	//Recuperando dados da transação
-	ordemTransacaoAsBytes, err := stub.GetState(idTransacao)
-	if err != nil || ordemTransacaoAsBytes == nil {
-		fmt.Println("Essa ordem nao existe")
-		return shim.Error("Essa ordem não existe.")
+	//Retrieving transaction data
+	OrderTransactionAsBytes, err := stub.GetState(idTransaction)
+	if err != nil || OrderTransactionAsBytes == nil {
+		fmt.Println("This order does not exist")
+		return shim.Error("This order does not exist")
 	}
 
-	//Encapsulando os dados do fabricante
-	ordem := OrdemTransacao{}
-	json.Unmarshal(ordemTransacaoAsBytes, &ordem)
+	//Encapsulating manufacturer data
+	order := orderTransacao{}
+	json.Unmarshal(OrderTransactionAsBytes, &order)
 
-	if ordem.ProprietarioOrdem != idProprietario {
-		fmt.Println("Você nao é proprietario dessa ordem")
-		return shim.Error("Você não é o proprietário dessa ordem")
+	if order.ownerOrder != ownerid {
+		fmt.Println("You do not own this order")
+		return shim.Error("You do not own this order")
 	}
 
-	//Recuperando dados do proprietario
-	proprietarioAsBytes, err := stub.GetState(ordem.ProprietarioOrdem)
-	if err != nil || ordemTransacaoAsBytes == nil {
-		fmt.Println("Seu proprietario nao existe")
-		return shim.Error("Seu proprietário não existe.")
+	//Retrieving owner data
+	ownerAsBytes, err := stub.GetState(order.ownerOrder)
+	if err != nil || OrderTransactionAsBytes == nil {
+		fmt.Println("Your owner does not exist")
+		return shim.Error("Your owner does not exist")
 	}
 
-	//Encapsulando os dados do fabricante
-	proprietario := Fabricante{}
-	json.Unmarshal(proprietarioAsBytes, &proprietario)
+	//Encapsulating manufacturer data
+	owner := manufacturer{}
+	json.Unmarshal(ownerAsBytes, &owner)
 
-	//Recuperando dados do comprador
-	compradorAsBytes, err := stub.GetState(ordem.IdComprador)
-	if err != nil || ordemTransacaoAsBytes == nil {
-		fmt.Println("Seu comprador nao existe")
-		return shim.Error("Seu comprador não existe.")
+	//Retrieving buyer data
+	buyerAsBytes, err := stub.GetState(order.BuyerID)
+	if err != nil || OrderTransactionAsBytes == nil {
+		fmt.Println("Your buyer does not exist")
+		return shim.Error("Your buyer does not exist")
 	}
 
-	//Encapsulando os dados do fabricante
-	comprador := Fabricante{}
-	json.Unmarshal(compradorAsBytes, &comprador)
+	//Encapsulating manufacturer data
+	buyer := manufacturer{}
+	json.Unmarshal(buyerAsBytes, &buyer)
 
-	if ordem.IdComprador == "null" {
-		fmt.Println("Nao houveram lances para essa ordem")
+	if order.BuyerID == "null" {
+		fmt.Println("There were no bids for this order")
 
-		return shim.Error("Não houveram lances para essa ordem")
+		return shim.Error("There were no bids for this order")
 	}
 
-	if ordem.TipoTransacao == "vender" {
-		proprietario.SaldoFiduciario += ordem.ValorUltimoLance
-		comprador.SaldoFiduciario -= ordem.ValorUltimoLance
-		ordem.StatusOrdem = "Fechado"
+	if order.TransactionType == "seller manufacturer does not exist" {
+		owner.Balance_Fiduciary += order.AmountLastBid
+		buyer.Balance_Fiduciary -= order.AmountLastBid
+		order.StatusOrder = "Closed"
 	}
 
-	if ordem.TipoTransacao == "comprar" {
-		proprietario.SaldoCarbono += ordem.ValorUltimoLance
-		comprador.SaldoCarbono -= ordem.ValorUltimoLance
-		ordem.StatusOrdem = "Fechado"
+	if order.TransactionType == "buy" {
+		owner.CarbonBalance += order.AmountLastBid
+		buyer.CarbonBalance -= order.AmountLastBid
+		order.StatusOrder = "Closed"
 	}
 
-	ordemTransacaoAsBytes, _ = json.Marshal(ordem)
-	proprietarioAsBytes, _ = json.Marshal(proprietario)
-	compradorAsBytes, _ = json.Marshal(comprador)
+	OrderTransactionAsBytes, _ = json.Marshal(order)
+	ownerAsBytes, _ = json.Marshal(owner)
+	buyerAsBytes, _ = json.Marshal(buyer)
 
-	stub.PutState(idTransacao, ordemTransacaoAsBytes)
-	stub.PutState(idProprietario, proprietarioAsBytes)
-	stub.PutState(ordem.IdComprador, compradorAsBytes)
+	stub.PutState(idTransaction, OrderTransactionAsBytes)
+	stub.PutState(ownerid, ownerAsBytes)
+	stub.PutState(order.BuyerID, buyerAsBytes)
 
-	fmt.Println("Transação finalizada com sucesso")
+	fmt.Println("Transaction completed successfully")
 	return shim.Success(nil)
 
 }
 
 func main() {
 	if err := shim.Start(new(SmartContract)); err != nil {
-		fmt.Printf("Erro ao compilar Smart Contract: %s\n", err)
+		fmt.Printf("Error compiling Smart Contract: %s\n", err)
 	}
 }
