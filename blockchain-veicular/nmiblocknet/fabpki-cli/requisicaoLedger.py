@@ -3,7 +3,7 @@ from flask import *
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 from vininfo import Vin
 from concurrent.futures import ThreadPoolExecutor
-import asyncio, couchdb, json, random, multiprocessing, os
+import asyncio, couchdb, json, random, multiprocessing, os, js2py
 
 domain = "ptb.de"
 channel_name = "nmi-channel"
@@ -40,7 +40,7 @@ class ThreadingFunction:
         
         exe = ThreadPoolExecutor(max_workers=5)
         listPlacas = []
-        listModelos = []
+        listModelos = [] 
         listLetras = []
         listNums = []
         
@@ -49,39 +49,43 @@ class ThreadingFunction:
 
         def getModelos(modelo):
             listModelos.append(modelo)
-
+            
         def getLetter():
             letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
-                'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+            'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
             letter = random.choice(letras)
             listLetras.append(letter)
-            
-
+                
         def getNum():
             nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
             num = random.choice(nums)
-            listNums.append(num)
+            listNums.append(str(num))
 
         def makePlaca():
-            
-            listLetras = []
-            listNumeros = []
-            
+
             for l in range(4):
                 t = exe.submit(getLetter)
                 
             for n in range(3):
                 t = exe.submit(getNum)
                 
-            placa = listLetras[0] + listLetras[1] + listLetras[2] + listNumeros[0] + listLetras[3] + listNumeros[1] + listNumeros[2]
+            while len(listLetras) != 4:
+                pass
+            while len(listNums) != 3:
+                pass
+            
+            placa = listLetras[0] + listLetras[1] + listLetras[2] + listNums[0] + listLetras[3] + listNums[1] + listNums[2]
             
             listPlacas.append(placa)
-        
+            
         for m in arq_json:
             t = exe.submit(getModelos(m))
             
         t = exe.submit(makePlaca)
 
+        while len(listPlacas) != 1:
+            pass
+        
         loop = asyncio.get_event_loop()
 
         c_hlf = client_fabric(net_profile=(domain + ".json"))
@@ -101,7 +105,30 @@ class ThreadingFunction:
                                 cc_version=cc_version,
                                 fcn='registrarVeiculoPBE',
                                 cc_pattern=None))
-            
+        
+    def processarTrajeto(idVeiculo):
+        
+        distancia = random.randrange(0, 250)
+        loop = asyncio.get_event_loop()
+
+        c_hlf = client_fabric(net_profile=(domain + ".json"))
+
+        admin = c_hlf.get_user(domain, 'Admin')
+        
+        callpeer = "peer0." + domain
+        
+        c_hlf.new_channel(channel_name)
+        
+        response = loop.run_until_complete(
+            c_hlf.chaincode_invoke(requestor=admin,
+                                channel_name=channel_name,
+                                peers=[callpeer],                               
+                                args=[],
+                                cc_name=cc_name,
+                                cc_version=cc_version,
+                                fcn='registrarVeiculoPBE',
+                                cc_pattern=None))
+                    
 
 @app.route('/modeloPBE', methods=['POST', 'GET'])
 def Modelo():
@@ -213,6 +240,9 @@ def Veiculo():
     
     if request.method == 'POST':
         
+        WMI = [['93G', 'KAWASAKI'], ['932', 'HARLEY-DAVIDSON'], ['9CD', 'SUZUKI'], ['93W', 'FIAT DUCATO'], ['9BM', 'MERCEDES-BENZ'], ['94T', 'TROLLER'], ['936', 'PEUGEOT'], ['935', 'CITROEN'], ['94D', 'NISSAN'], ['93Y', 'RENAULT'], ['93X', 'MITSUBISH'], ['93U', 'AUDI'], ['93H', 'HONDA'], ['9BR', 'TOYOTA'], ['9BD', 'FIAT'], ['9BF', 'FORD'], ['9BG', 'CHEVROLET'], ['9BW', 'VOLKSWAGEN'], ['93R', 'TOYOTA']]
+        
+        
         request_data = request.get_json()
         
         loop = asyncio.get_event_loop()
@@ -225,14 +255,24 @@ def Veiculo():
         
         c_hlf.new_channel(channel_name)
         
-        vin = Vin(request_data["Vim"])
-        fabNome = (vin.manufacturer).upper().replace(" ", "")
-
+        fabNome = ''        
+        vin = request_data["Vin"]
+        try:
+            vinType = Vin(vin)
+            fabNome = (vinType.manufacturer).upper().replace(" ", "")
+        except:
+            for i in WMI:
+                if vin[0:3] == i[0]:
+                    fabNome = i[1]
+                    break
+            pass
+            
+    
         response = loop.run_until_complete(
             c_hlf.chaincode_invoke(requestor=admin,
                                 channel_name=channel_name,
                                 peers=[callpeer],                               
-                                args=[request_data["Vim"], request_data["Hash"], request_data["Co2"], fabNome],
+                                args=[vin, request_data["Hash"], request_data["Co2"], fabNome],
                                 cc_name=cc_name,
                                 cc_version=cc_version,
                                 fcn='registrarVeiculo',
