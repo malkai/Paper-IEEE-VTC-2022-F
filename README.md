@@ -203,5 +203,3 @@ There are some business rules within the system, such as the impossibility of pl
 
 In this last endpoint it will be possible to close the order for new bids, at its closing the respective balance is computed for the owner and the last bidder of the order, this order will also be closed for new bids.
 
-
-
