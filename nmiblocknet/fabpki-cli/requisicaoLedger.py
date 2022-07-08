@@ -101,8 +101,19 @@ def vehicle():
         
         c_hlf.new_channel(channel_name)
         
-        vin = Vin(request_data["Vim"])
-        ManuName = (vin.manufacturer).upper().replace(" ", "")
+        WMI = [['93G', 'KAWASAKI'], ['932', 'HARLEY-DAVIDSON'], ['9CD', 'SUZUKI'], ['93W', 'FIAT DUCATO'], ['9BM', 'MERCEDES-BENZ'], ['94T', 'TROLLER'], ['936', 'PEUGEOT'], ['935', 'CITROEN'], ['94D', 'NISSAN'], ['93Y', 'RENAULT'], ['93X', 'MITSUBISH'], ['93U', 'AUDI'], ['93H', 'HONDA'], ['9BR', 'TOYOTA'], ['9BD', 'FIAT'], ['9BF', 'FORD'], ['9BG', 'CHEVROLET'], ['9BW', 'VOLKSWAGEN'], ['93R', 'TOYOTA']]
+
+        ManuName = ''        
+        vin = request_data["Vin"]
+        try:
+            vinType = Vin(vin)
+            ManuName = (vinType.manufacturer).upper().replace(" ", "")
+        except:
+            for i in WMI:
+                if vin[0:3] == i[0]:
+                    ManuName = i[1]
+                    break
+            pass
 
         response = loop.run_until_complete(
             c_hlf.chaincode_invoke(requestor=admin,
