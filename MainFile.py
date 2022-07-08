@@ -87,9 +87,16 @@ alldata =  {}
 y = []
 var_vali = True 
 
-alldata = connect_firebase.getDoc()
+#alldata = connect_firebase.getDoc()
+alldata = {'a','b','c'}
+
+with open('readme.txt', 'w') as f:
+    for doc in alldata:
+       f.write(doc)
+       f.write('\n') 
 
 
+'''
 for doc in alldata:
        
         calc_1 = 0
@@ -156,7 +163,7 @@ for doc in alldata:
                
         
         
-        '''
+        
         try:
             MAF_var = doc.get('obdData.`01 10`.response')
             
@@ -165,7 +172,7 @@ for doc in alldata:
             print("Not found MAF")
         
         var_vali = validate(MAF_var)
-        '''
+        
       
         try:
            calc_1 = calc_co2_speed(float(RPM_var),float(kPa),float(temp_air))
@@ -178,15 +185,14 @@ for doc in alldata:
         if(calc_1!=0):
             aux_carro = Vehicle(vin,id,calc_1,data)
             y.append(aux_carro)
+'''
+
 
 #y.sort(key=lambda x:(x.vin, x.data), reverse=True)
 #for doc in y:
 #    print(doc)
 
-#with open('readme.txt', 'w') as f:
-#    for doc in y:
-#        f.write(doc)
-#        f.write('\n')    
+  
     
 #post_information(y)
 #connect_firebase.change_flag(y)        

@@ -2,7 +2,7 @@
 
 Does this repository contain the implementation of the Crowdsourcing and Monetization Strategy to increase Energy Efficience in Vehicles Mobility. It was developed on INMETRO to gather the emission of carbon from vehicles with an OBD2 scanner. This software will be essential for manufacturers when they need to curb their carbon. 
 
- Research team:
+Research team:
 
 Malkai dos S. P. Oliveira (omalkai14@gmail.com)
 
