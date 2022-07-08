@@ -3,7 +3,7 @@ from subprocess import check_output
 from Requestinformation import post_information
 import connect_firebase
 from vehicle import Vehicle
-
+import json
 
 #in this function we only acknowledge gasoline for make the math
 # Speed density:
@@ -101,14 +101,9 @@ for doc in alldata:
         MAF_var = ''
         RPM_var = ''
         vin = ''
+        data = ''
         id = doc.id
-        #print('')
-       
-        #print(var_vali)
-        
-       
-
-          
+        print(id)   
         try:
             velocity = doc.get('obdData.`01 0D`.response')
         except:          
@@ -116,7 +111,14 @@ for doc in alldata:
             #print("Not found velocity")
         
         var_vali = validate(velocity)
-       
+        
+        try:
+            data = doc.get('timeStamp')
+        except:          
+            var_vali = False
+            #print("Not found data")
+        
+        var_vali = validate(velocity)
 
         try:
             kPa = doc.get('obdData.`01 0B`.response')  
@@ -169,19 +171,22 @@ for doc in alldata:
            calc_1 = calc_co2_speed(float(RPM_var),float(kPa),float(temp_air))
             
         except:
-            print("print erro")          
-        #if(var_vali == True):
-            #calc_2 = calc_co2(float(MAF_var))
-            #print(calc_1)
+            a = 1
+                
         var_vali = True 
 
         if(calc_1!=0):
-            aux_carro = Vehicle(vin,id,calc_1)
+            aux_carro = Vehicle(vin,id,calc_1,data)
             y.append(aux_carro)
 
+#y.sort(key=lambda x:(x.vin, x.data), reverse=True)
+#for doc in y:
+#    print(doc)
 
-
-for doc in y:
-    print(doc.vin,doc.hash,doc.co2)
+#with open('readme.txt', 'w') as f:
+#    for doc in y:
+#        f.write(doc)
+#        f.write('\n')    
+    
 #post_information(y)
 #connect_firebase.change_flag(y)        

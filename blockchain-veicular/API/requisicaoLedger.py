@@ -8,7 +8,6 @@ domain = "ptb.de"
 channel_name = "nmi-channel"
 cc_name = "fabpki"
 cc_version = "1.0"
-import couchdb, json
 
 app = Flask(__name__)
 
