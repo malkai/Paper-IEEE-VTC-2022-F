@@ -59,7 +59,7 @@ In this last endpoint it will be possible to close the order for new bids, at it
 
 # 2. Generating MSP artifacts
 
-First you need to check the variable FABRIC_CFG_PATH, uncomment it at [configmsp.sh](blockchain-veicular/dependencias/configmsp.sh)
+First you need to check the variable FABRIC_CFG_PATH, uncomment it at [configmsp.sh](nmiblocknet\configmsp.sh)
 
 ```console
 export FABRIC_CFG_PATH=$PWD
@@ -71,11 +71,11 @@ After that run the script:
 ./configmsp.sh
 ```
 
-This script generates the MSP certificates in the folder [crypto-config](blockchain/crypto-config/) which must be replaced in  [ptb.de.json](blockchain/fabpki-cli/ptb.de.json) and [inmetro.br.json](blockchain/fabpki-cli/inmetro.br.json) on lines 38,39,51
+This script generates the MSP certificates in the folder crypto-config which must be replaced in  [ptb.de.json](nmiblocknet\fabpki-cli\ptb.de.json) and [inmetro.br.json](nmiblocknet\fabpki-cli\inmetro.br.json) on lines 38,39,51
 
 # 3. Managing docker containers
 
-Let's then check the contents in the folder [.env](blockchain/.env), access it and change it according to your IP address. We must also access [ptb.de.json](blockchain/fabpki-cli/ptb.de.json), [inmetro.br.json](blockchain/fabpki-cli/inmetro.br.json) and modify on lines 58,76,77 with your machine IP address. If you want you can keep the default port *(:7050 / :7051 / :7053)*.
+Let's then check the contents in the folder [.env](nmiblocknet\.env), access it and change it according to your IP address. We must also access [ptb.de.json](nmiblocknet\fabpki-cli\ptb.de.json), [inmetro.br.json](nmiblocknet\fabpki-cli\inmetro.br.json) and modify on lines 58,76,77 with your machine IP address. If you want you can keep the default port *(:7050 / :7051 / :7053)*.
 
 To start the container of a specific organization use the command:
 
@@ -118,7 +118,7 @@ docker stats
 
 # 5. Installing and instance chaincode
 
-Insert the chaincode inside the folder [fabpki](blockchain/fabpki/), go back to the project root folder and run the following command to install the chaincode:
+Insert the chaincode inside the folder [fabpki](nmiblocknet\fabpki-cli), go back to the project root folder and run the following command to install the chaincode:
 
 ```console
 ./configchaincode.sh install cli0 fabpki 1.0
@@ -153,32 +153,32 @@ sudo make install
 
 # 7. Starting API 
 
-Run the API [requisicaoLedger.py](API/requisicaoLedger.py) with:
+Run the API [ledgerRequest.py](nmiblocknet\fabpki-cli\ledgerRequest.py) with:
 
 ```console
 python3 requisicaoAPI.py
 ```
 
-Your terminal will show two IP addresses. Generally, in a local environment, the*127.0.0.1 (o mesmo que localhost)*, however, if you want to make requests outside your local environment, you must use the IP of your network.
+Your terminal will show two IP addresses. Generally, in a local environment, the *127.0.0.1 (same as localhost)*, however, if you want to make requests outside your local environment, you must use the IP of your network.
 
 # 8. Fazendo requisições 
 
 
-Install Insomnia or any other environment for testing HTTPS requests, if you use Insomnia import the file [backup-insomnia.json](extras/backup_insomnia.json), if you don't have Insomia, you can check the body of requests just by the JSON file.
+Install Insomnia or any other environment for testing HTTPS requests, if you use Insomnia import the file [backup-insomnia.json](nmiblocknet\extras\backup_insomnia.json), if you don't have Insomia, you can check the body of requests just by the JSON file.
 
 
 ### How to make a POST of Information
-![Post Vehicle](https://i.imgur.com/pTDURzy.png)
+![Post Vehicle](https://i.imgur.com/4tInvyv.png)
 
 This is the body needed to insert a vehicle into the network, notice that there is a parameter called "Vin", it is super important because it is necessary for the registration of manufacturers within the network, so make sure that this Vin is a valid parameter to avoid conflicts.
 
 ### How to make a POST of Manufacturer
-![Post Manufacturer](https://i.imgur.com/5b8Q4QL.png)
+![Post Manufacturer](https://i.imgur.com/Pgy0EKm.png)
 
 At first it will not be necessary to use this endpoint, as manufacturers are automatically entered when verifying the vehicle manufacturer, this is done so that vehicle credits are not lost if the vehicle manufacturer does not exist on the network.
 
 ### How to make a POST of Balance on ledger
-![Post Saldo](https://i.imgur.com/1dAMC2T.png)
+![Post Sold](https://i.imgur.com/JRuZKoZ.png)
 
 This endpoint is used so that the amount of accumulated Co2 from the manufacturers is converted into a balance based on a target, in a system issue this endpoint must be activated at equidistant periods for a more accurate sampling of these calculations.
 
@@ -186,20 +186,20 @@ This endpoint is used so that the amount of accumulated Co2 from the manufacture
 
 After calculating the balance of manufacturers, it will be possible to start transactions within the system, where manufacturers with a negative carbon balance can buy the balance of other manufacturers with a fiat currency. Everyone starts with 10,000 of this fiat currency for testing.
 
-## POST start an order
-![Post Iniciar Ordem](https://i.imgur.com/1dAMC2T.png)
+## POST - Start an order
+![Post Start an order](https://i.imgur.com/4tJI6WV.png)
 
 With this endpoint it is possible to start a new *order*. As a parameter we have the owner of the order, which will come with the id of the manufacturer within the blockchain records *(In this network, the entire manufacturer starts with "fab-")*. We have the purchase type, being authorized with "seller" and "seller". The last one offered, if filled in "with balance to buy" in the balance balance type field, this balance balance, if filled in "sell" will represent the balance of the carbon balance
 
-## POST register an bid
-![Post bid](https://i.imgur.com/4adFlzR.png)
+## POST - Register an bid
+![Post bid](https://i.imgur.com/BCfamAP.png)
 
 This endpoint represents a bid within the previously created order. It has the created transaction id in its JSON body *(There is a GET endpoint for transactions in Insomnia's backup JSON)*. The amount of your bid, with the details in case the order is a sell or buy order explained in the previous item. Lastly, the buyer id.
 
 There are some business rules within the system, such as the impossibility of placing two bids in a row for the same manufacturer, or even placing a bid with insufficient balance. Watch out for that!
 
-## POST close an order
-![Post close order](https://i.imgur.com/4adFlzR.png)
+## POST - Close an order
+![Post close order](https://i.imgur.com/N4Byu8p.png)
 
 In this last endpoint it will be possible to close the order for new bids, at its closing the respective balance is computed for the owner and the last bidder of the order, this order will also be closed for new bids.
 
