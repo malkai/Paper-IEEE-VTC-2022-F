@@ -23,7 +23,7 @@ def manufacturer():
         
         for doc in db.view('_all_docs'):
                 i = doc['id']
-                if i[0:4] == "fab-":
+                if i[0:5] == "manu-":
                     for doc in db.find({
                             "selector": {
                             "_id": "{id}".format(id=i)
@@ -75,7 +75,7 @@ def vehicle():
         
         for doc in db.view('_all_docs'):
                 i = doc['id']
-                if i[0:5] == "veic-":
+                if i[0:5] == "vehi-":
                     for doc in db.find({
                             "selector": {
                             "_id": "{id}".format(id=i)
@@ -119,7 +119,7 @@ def vehicle():
             c_hlf.chaincode_invoke(requestor=admin,
                                 channel_name=channel_name,
                                 peers=[callpeer],                               
-                                args=[request_data["Vim"], request_data["Hash"], request_data["Co2"], ManuName],
+                                args=[vin, request_data["Hash"], request_data["Co2"], ManuName],
                                 cc_name=cc_name,
                                 cc_version=cc_version,
                                 fcn='registerVehicle',
@@ -144,7 +144,7 @@ def babid():
         
         for doc in db.view('_all_docs'):
                 i = doc['id']
-                if i[0:4] == "fab-":
+                if i[0:5] == "manu-":
                     listVehicles.append(i)
         
         for i in listVehicles:
@@ -203,10 +203,10 @@ def order():
             c_hlf.chaincode_invoke(requestor=admin,
                                 channel_name=channel_name,
                                 peers=[callpeer],                               
-                                args=[request_data["orderOwner"], request_data["TransactionType"], request_data["OfferedbabidOfertado"]],
+                                args=[request_data["orderOwner"], request_data["transactionType"], request_data["offeredBabid"]],
                                 cc_name=cc_name,
                                 cc_version=cc_version,
-                                fcn='announceorder',
+                                fcn='announceOrder',
                                 cc_pattern=None))
         
         return Response(response=json.dumps({
@@ -236,7 +236,7 @@ def bid():
                                 args=[request_data["transactionId"], request_data["valueBid"], request_data["buyerId"]],
                                 cc_name=cc_name,
                                 cc_version=cc_version,
-                                fcn='orderBid',
+                                fcn='bidOrder',
                                 cc_pattern=None))
         
         return Response(response=json.dumps({
@@ -271,13 +271,7 @@ def closeOrder():
         
         return Response(response=json.dumps({
             "status": 201,
-            "message": "bid successfully registered"}), status=201, mimetype='application/json') 
+            "message": "Order successfully closed"}), status=201, mimetype='application/json') 
     
 if __name__ == "__main__":
     app.run(debug=True, port=8001, host="0.0.0.0")
-
-
-
-
-
-
