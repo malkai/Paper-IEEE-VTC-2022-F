@@ -1,16 +1,3 @@
-/////////////////////////////////////////////
-//    THE BLOCKCHAIN PKI EXPERIMENT     ////
-///////////////////////////////////////////
-/*
-	This is the manupki, a chaincode that implements a Public Key Infrastructure (PKI)
-	for measuring instruments. It runs in Hyperledger manuric 1.4.
-	He was created as part of the PKI Experiment. You can invoke its methods
-	to store measuring instruments public keys in the ledger, and also to verify
-	digital signatures that are supposed to come from these instruments.
-
-	@author: Wilson S. Melo Jr.
-	@date: Oct/2019
-*/
 package main
 
 import (
@@ -21,8 +8,8 @@ import (
 	"math/rand"
 	"strconv"
 
-	"github.com/hyperledger/manuric/core/chaincode/shim"
-	sc "github.com/hyperledger/manuric/protos/peer"
+	"github.com/hyperledger/fabric/core/chaincode/shim"
+	sc "github.com/hyperledger/fabric/protos/peer"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890") //Criar sequencia de letras
@@ -47,29 +34,30 @@ func Round(n float64) float64 {
 	return numberRounded
 }
 
-type smartContract struct {
+type SmartContract struct {
 }
 
-type vehicle struct { //"user-"
-	Hash       string  `json:"Hash"`
-	VIN        string  `json:"VIN"`
-	Co2Emitted float64 `json:"Co2Emitted"`
+type Vehicle struct { //"vehi-"
+	Hash         string  `json:"Hash"`
+	VIN          string  `json:"VIN"`
+	Co2Emitted   float64 `json:"Co2Emitted"`
 	manufacturer string  `json:"Manufacturer"`
 }
 
-type manufacturer struct { //"manu-""
-	Co2Tot          float64 `json:"Co2_Tot"`
-	CarbonBalance    float64 `json:"CarbonBalance"`
+type Manufacturer struct { //"manu-""
+	Co2Tot            float64 `json:"Co2_Tot"`
+	CarbonBalance     float64 `json:"CarbonBalance"`
 	Balance_Fiduciary float64 `json:"Balance_Fiduciary"`
 }
 
-type transactionOrder struct { //"trans-"
-	OwnerOrder string  `json:"OwnerOrder"` // FK (Vehicle)
-	TransactionType     string  `json:"TransactionType"`     // 1: Sell carbon -- 2: Buy carbon
-	BalanceOffered     float64 `json:"BalanceOffered"`
-	BuyerID       string  `json:"BuyerID"`
-	AmountLastBid  float64 `json:"AmountLastBid"`
-	StatusOrder       string  `json:"StatusOrder"` //Recent - Progress - Closed
+type TransactionOrder struct { //"trans-"
+	OwnerOrder      string  `json:"OwnerOrder"`
+	TransactionType string  `json:"TransactionType"` // 1: Sell carbon -- 2: Buy carbon
+	BalanceOffered  float64 `json:"BalanceOffered"`
+	BuyerID         string  `json:"BuyerID"`
+	AmountLastBid   float64 `json:"AmountLastBid"`
+	StatusOrder     string  `json:"StatusOrder"` //Recent - Progress - Closed
+}
 
 func (s *SmartContract) Init(stub shim.ChaincodeStubInterface) sc.Response {
 	return shim.Success(nil)
@@ -91,7 +79,6 @@ func (s *SmartContract) Invoke(stub shim.ChaincodeStubInterface) sc.Response {
 	} else if fn == "closeOrder" {
 		return s.closeOrder(stub, args)
 	}
-	idOrder
 	return shim.Error("Chaincode does not support this function")
 }
 
@@ -103,9 +90,9 @@ func (s *SmartContract) registerManufacturer(stub shim.ChaincodeStubInterface, a
 
 	nameManu := args[0]
 
-	manufacturerInfor := manufacturer{
-		Co2Tot:          0.0,
-		CarbonBalance:    0.0,
+	manufacturerInfor := Manufacturer{
+		Co2Tot:            0.0,
+		CarbonBalance:     0.0,
 		Balance_Fiduciary: 100000.0,
 	}
 
@@ -128,23 +115,24 @@ func (s *SmartContract) registerVehicle(stub shim.ChaincodeStubInterface, args [
 	vim := args[0]
 	hash := args[1]
 	co2 := args[2]
-	ManuName := args[3]
+	manuName := args[3]
 
 	co2VehiFloat, err := strconv.ParseFloat(co2, 64)
 
 	//Create Struct to manipulate vehicle information
 	userVehicle := Vehicle{
-		Hash:       hash,
-		VIN:        vim,
-		Co2Emitted: co2VehiFloat,
-		manufacturer: ManuName,
+		Hash:         hash,
+		VIN:          vim,
+		Co2Emitted:   co2VehiFloat,
+		manufacturer: manuName,
 	}
 
 	//Retrieving user data
-	manufacturerAsBytes, err := stub.GetStidOrder
-		manufacturerInfor := manufacturer{
-			Co2Tot:          0.0,
-			CarbonBalance:    0.0,
+	manufacturerAsBytes, err := stub.GetState("manu-" + manuName)
+	if err != nil || manufacturerAsBytes == nil {
+		manufacturerInfor := Manufacturer{
+			Co2Tot:            0.0,
+			CarbonBalance:     0.0,
 			Balance_Fiduciary: 100000.0,
 		}
 
@@ -153,8 +141,8 @@ func (s *SmartContract) registerVehicle(stub shim.ChaincodeStubInterface, args [
 		VehicleAsBytes, _ := json.Marshal(userVehicle)
 		manufacturerAsBytes, _ = json.Marshal(manufacturerInfor)
 
-		stub.PutState(("manu-" + ManuName), manufacturerAsBytes)
-		stub.PutState(("Vehi-" + vim), VehicleAsBytes)
+		stub.PutState(("manu-" + manuName), manufacturerAsBytes)
+		stub.PutState(("vehi-" + vim), VehicleAsBytes)
 
 		fmt.Println("Success in registering Vehicle and manufacturer")
 		return shim.Success(nil)
@@ -162,16 +150,15 @@ func (s *SmartContract) registerVehicle(stub shim.ChaincodeStubInterface, args [
 	}
 
 	//Criando Struct para encapsular os dados do Vehicle
-	manufacturer := manufacturer{}
+	manufacturer := Manufacturer{}
 	json.Unmarshal(manufacturerAsBytes, &manufacturer)
-	idOrder
 	manufacturer.Co2Tot += co2VehiFloat
 
 	VehicleAsBytes, _ := json.Marshal(userVehicle)
 	manufacturerAsBytes, _ = json.Marshal(manufacturer)
 
-	stub.PutState(("manu-" + ManuName), manufacturerAsBytes)
-	stub.PutState(("Vehi-" + vim), VehicleAsBytes)
+	stub.PutState(("manu-" + manuName), manufacturerAsBytes)
+	stub.PutState(("vehi-" + vim), VehicleAsBytes)
 
 	fmt.Println("Success registering Vehicle")
 	return shim.Success(nil)
@@ -192,7 +179,7 @@ func (s *SmartContract) registerCredit(stub shim.ChaincodeStubInterface, args []
 	}
 
 	//Criando Struct para encapsular os dados do Vehicle
-	manufacturer := manufacturer{}
+	manufacturer := Manufacturer{}
 	json.Unmarshal(manufacturerAsBytes, &manufacturer)
 
 	if manufacturer.Co2Tot == 0.0 {
@@ -233,10 +220,10 @@ func (s *SmartContract) announceOrder(stub shim.ChaincodeStubInterface, args []s
 	}
 
 	//Creating Struct to encapsulate manufacturer data
-	manufacturer := manufacturer{}
+	manufacturer := Manufacturer{}
 	json.Unmarshal(manufacturerAsBytes, &manufacturer)
 
-	if TransactionType == "sell manufacturer does not exist" {
+	if TransactionType == "sell" {
 		if balanceOfferFloat > manufacturer.CarbonBalance {
 			fmt.Println("You don't have enough carbon balance")
 			return shim.Error("You don't have enough carbon balance")
@@ -244,7 +231,7 @@ func (s *SmartContract) announceOrder(stub shim.ChaincodeStubInterface, args []s
 		manufacturer.CarbonBalance -= balanceOfferFloat
 	}
 
-	if TransactionType == "Buy" {
+	if TransactionType == "buy" {
 		if balanceOfferFloat > manufacturer.Balance_Fiduciary {
 			fmt.Println("You don't have enough trust balance")
 			return shim.Error("You don't have enough trust balance")
@@ -252,13 +239,13 @@ func (s *SmartContract) announceOrder(stub shim.ChaincodeStubInterface, args []s
 		manufacturer.Balance_Fiduciary -= balanceOfferFloat
 	}
 
-	salesOrder := orderTransacao{
-		BuyerID:       "null",
-		AmountLastBid:  0.0,
-		StatusOrder:       "Recent",
-		ownerOrder: ownerOrder,
-		BalanceOffered:     balanceOfferFloat,
-		TransactionType:     TransactionType,
+	salesOrder := TransactionOrder{
+		BuyerID:         "null",
+		AmountLastBid:   0.0,
+		StatusOrder:     "Recent",
+		OwnerOrder:      ownerOrder,
+		BalanceOffered:  balanceOfferFloat,
+		TransactionType: TransactionType,
 	}
 
 	salesOrderAsBytes, _ := json.Marshal(salesOrder)
@@ -301,7 +288,7 @@ func (s *SmartContract) bidOrder(stub shim.ChaincodeStubInterface, args []string
 	}
 
 	//Encapsulating transaction order and manufacturer data
-	order := orderTransacao{}
+	order := TransactionOrder{}
 	json.Unmarshal(OrderTransactionAsBytes, &order)
 
 	if order.StatusOrder == "Closed" {
@@ -313,10 +300,10 @@ func (s *SmartContract) bidOrder(stub shim.ChaincodeStubInterface, args []string
 		fmt.Println("You cannot bid twice")
 	}
 
-	manufacturer := manufacturer{}
+	manufacturer := Manufacturer{}
 	json.Unmarshal(manufacturerAsBytes, &manufacturer)
 
-	if valueLanceFloat > manufacturer.Balance_Fiduciary && order.TransactionType == "sell manufacturer does not exist" {
+	if valueLanceFloat > manufacturer.Balance_Fiduciary && order.TransactionType == "sell" {
 		fmt.Println("You don't have enough trust balance")
 		return shim.Error("You don't have enough trust balance.")
 	}
@@ -361,23 +348,23 @@ func (s *SmartContract) closeOrder(stub shim.ChaincodeStubInterface, args []stri
 	}
 
 	//Encapsulating manufacturer data
-	order := orderTransacao{}
+	order := TransactionOrder{}
 	json.Unmarshal(OrderTransactionAsBytes, &order)
 
-	if order.ownerOrder != ownerid {
+	if order.OwnerOrder != ownerid {
 		fmt.Println("You do not own this order")
 		return shim.Error("You do not own this order")
 	}
 
 	//Retrieving owner data
-	ownerAsBytes, err := stub.GetState(order.ownerOrder)
+	ownerAsBytes, err := stub.GetState(order.OwnerOrder)
 	if err != nil || OrderTransactionAsBytes == nil {
 		fmt.Println("Your owner does not exist")
 		return shim.Error("Your owner does not exist")
 	}
 
 	//Encapsulating manufacturer data
-	owner := manufacturer{}
+	owner := Manufacturer{}
 	json.Unmarshal(ownerAsBytes, &owner)
 
 	//Retrieving buyer data
@@ -388,7 +375,7 @@ func (s *SmartContract) closeOrder(stub shim.ChaincodeStubInterface, args []stri
 	}
 
 	//Encapsulating manufacturer data
-	buyer := manufacturer{}
+	buyer := Manufacturer{}
 	json.Unmarshal(buyerAsBytes, &buyer)
 
 	if order.BuyerID == "null" {
@@ -397,7 +384,7 @@ func (s *SmartContract) closeOrder(stub shim.ChaincodeStubInterface, args []stri
 		return shim.Error("There were no bids for this order")
 	}
 
-	if order.TransactionType == "seller manufacturer does not exist" {
+	if order.TransactionType == "sell" {
 		owner.Balance_Fiduciary += order.AmountLastBid
 		buyer.Balance_Fiduciary -= order.AmountLastBid
 		order.StatusOrder = "Closed"
@@ -417,7 +404,7 @@ func (s *SmartContract) closeOrder(stub shim.ChaincodeStubInterface, args []stri
 	stub.PutState(ownerid, ownerAsBytes)
 	stub.PutState(order.BuyerID, buyerAsBytes)
 
-	fmt.Println("Transaction completed successfully")
+	fmt.Println("Transaction successfully closed")
 	return shim.Success(nil)
 
 }
