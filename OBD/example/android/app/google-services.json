@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "882923537217",
+    "project_id": "paper-ieee-vtc-2022",
+    "storage_bucket": "paper-ieee-vtc-2022.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:882923537217:android:5d402d2d74bfa57b6717c0",
+        "android_client_info": {
+          "package_name": "app.begaz.obd.two.plugin.obd2_plugin_example"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "882923537217-55je5ahacuk3o5ar5qbdpk027ae7d600.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0w6JvtaS2R4DEX6kLqPus4DbhRIPXMt8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "882923537217-55je5ahacuk3o5ar5qbdpk027ae7d600.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
