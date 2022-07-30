@@ -1,15 +1,16 @@
 from __future__ import annotations
-from xml.dom.minidom import Document
-from tinydb import TinyDB, Query
+from concurrent.futures.process import _threads_wakeups
+from tinydb import TinyDB
 import os.path
 import json
 from vahiclehelp import Vehicle_Help
 import calculation_co2
-import csv
 import datetime 
-from datetime import datetime, timedelta
-import time
-import geopy.distance
+from datetime import datetime 
+import haversine
+from haversine import haversine
+import matplotlib.pyplot as plt
+
 
 def createDb():
     y =[] 
@@ -31,13 +32,13 @@ def createDb():
                 kpa = data[i]['obdData']['01 0B']['response']
                 temp_air = data[i]['obdData']['01 0F']['response']
                 rpm = data[i]['obdData']['01 0C']['response']
-               
+                level = data[i]['obdData']['01 2F']['response']
                 if(len(vin)==17):
                     #co2 = data[i]['obdData']['01 10']['response']
                     
                     co2 = calculation_co2.calc_co2_speed(float(rpm), float(kpa), float(temp_air))
                     if(co2!=0):
-                        help_var = Vehicle_Help(vin, hash, co2, times_tamp,lat, lon)
+                        help_var = Vehicle_Help(vin, hash, co2, times_tamp,lat, lon,level)
                         y.append(help_var)
                 else:  
                     print('Error '+hash) 
@@ -46,151 +47,107 @@ def createDb():
            
         db = TinyDB('db.json')
         for doc in y:
-            db.insert({'vin':doc.vin,'hash':doc.hash,'co2':doc.co2,'times_tamp':doc.data,'lat':doc.lat,'lon':doc.lon})
-            #if(data[i].get('userId') != 'None'):
-            #    print('teste')
-        #db = TinyDB('db.json')
-    #print(db.all())
+            db.insert({'vin':doc.vin,'hash':doc.hash,'co2':doc.co2,'times_tamp':doc.data,'lat':doc.lat,'lon':doc.lon, 'percent':doc.level})
+          
 
-#def insertDb():
-vin = ''
-co2_total = 0
 
-hash = ''
-    
-def searchDb():
+def plot_information(total_vin):
+    for i in total_vin:
+        plt.plot(i[1],i[2])
+        plt.title("Medida percorrida "+ i[0])
+        plt.xlabel("Tempo em segundos(s)")
+        plt.ylabel("Quilómetros(KM)")
+        plt.show()
+
+
+def print_veh():
     db = TinyDB('db.json')
-    Todo = Query()
-    y = []
-    y1 = []
-    vin = ''
-    co2_total = 0
-    temp_day = ''
-  
-    fmt = '%Y-%m-%d %H:%M:%S.%f'
     ah = db.all()
-    for doc in ah:
-        if(doc['vin'] not in y):
-           y.append(doc['vin'])
+    ah.sort(key=lambda x:(x['vin'], x['times_tamp']), reverse=True)
     
-    for h1 in y:
-        print(h1)  
-        ah = db.search(Todo['vin']==h1)
-        vin = h1
-        ah.sort(key=lambda x:(x['vin'], x['times_tamp']), reverse=True)
-        co2_total = 0
-        result= 0 
-        menor = 0
-        km = 0
-        new_value =0 
-        help_time = 0
-        temp_day='' 
-        ant = 0
-        pos = 0
-        for doc in ah:
-            if(doc['vin']=='93HGK5870GZ218968'):
-                print(doc['vin'],doc['times_tamp'],doc['co2'])
-            if(temp_day==''):
-                temp_day = datetime.strptime(doc['times_tamp'], fmt)
-                cord1=(doc['lat'],doc['lon'])
-                co2_total += doc['co2'] 
-            
-            time_after = datetime.strptime(doc['times_tamp'], fmt)
-            
-            if(temp_day > time_after ):
-                ant = pos
-                pos = (temp_day-time_after).total_seconds()/60
-                
-                if(pos-ant>0 and pos-ant<1):
-                    #print(pos-ant)
-                #menor = datetime.strptime(doc['times_tamp'], fmt)
-                    menor = result
-                    #print(doc['co2'],co2_total)
-                   
-                    co2_total += doc['co2']
-                    help_time += (pos-ant) 
-                #print(menor)
-                    result = (temp_day -time_after).total_seconds()
-                    cord2 = (doc['lat'],doc['lon'])
-                    old_value = new_value
-                    new_value = geopy.distance.geodesic(cord1, cord2).km
-                    if(old_value != new_value and (result- menor) / 60>0 ):
-                    #print(cord1,cord2)
-                        #print(cord1,cord2,geopy.distance.geodesic(cord1, cord2).km) 
-                        km += geopy.distance.geodesic(cord1, cord2).km
-                        cord1 = cord2
-            
-                    if(result>1000):
-                        y1.append([vin,doc['times_tamp'],co2_total,km,help_time])
-                        temp_day = ''
-                        cord1=cord2
-                        co2_total = 0
-                        km = 0
-                        help_time=0
-              
-                
-               
-                
-                #print(result/60)
-                #print(cord1,cord2)    
-                  
-        km += geopy.distance.geodesic(cord1, cord2).km 
-        if(temp_day!=''):
-            y1.append([vin,doc['times_tamp'],co2_total,km,help_time])
+    time_y = []
+    km_x = []
+    total_vin = []
+    percent = []
+    
+    vin = ''
+    fmt = '%Y-%m-%d %H:%M:%S.%f'
+    temp_day = ''
+    result= ''
+    
+    soma_time = 0 
+    soma_km = 0
+    harv=0
 
-                
-    #for doc in y1:
-       #print(doc)
+    for h1 in ah:
+        if temp_day=='':
+            temp_day = datetime.strptime(h1['times_tamp'], fmt)
+            cord_ant=(h1['lat'],h1['lon'])
+            vin = h1['vin'] 
+        
+        time_after = datetime.strptime(h1['times_tamp'], fmt)
+        cord_prox=(h1['lat'],h1['lon']) 
+         
+        if cord_prox!=cord_ant: 
+            result =   temp_day - time_after
            
-            #if(result!=0):
-
-            #print(result // 60)
-            #if(temp_day > doc['times_tamp']):
-
-            #    print('oi')
-    with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
-        writer = csv.writer(f)
-
-
-        
-        # write multiple rows
-        writer.writerows(y1)                
-             
-
-'''
+            
+            if result.seconds<=60:
+          
+                harv = haversine(cord_ant,cord_prox)
+                         
+                if 0 not in km_x:
+                    time_y.append(0)   
+                    km_x.append(0.0) 
+                else:
+                    soma_km += harv
+                    soma_time += result.seconds 
+                    time_y.append(soma_time)   
+                    km_x.append(soma_km) 
+                    percent.append(h1['percent'])
+                      
+                  
+                temp_day = time_after
+                cord_ant = cord_prox   
+            
+            else:
+                if len(time_y)>1 and len(km_x)>1:
+                    total_vin.append([vin, time_y[:],km_x[:],percent[:]])  
+                vin = h1['vin'] 
+                temp_day = ''
+                soma_time = 0
+                soma_km = 0 
+                result = ''  
                 
-    #sorted(ah, key=lambda x: x['Age'], reverse=True)
-    for i in ah:
+                time_y.clear()
+                km_x.clear()
+                percent.clear()
+                
             
-            print(i['co2'])
-            if(tempo_dia==''):
-                tempo_dia = i['times_tamp'][0:10]    
-            co2_total += i['co2']
-            
-        y1.append([vin,tempo_dia,co2_total])
-        tempo_dia = ''
-        co2_total = 0
+        
+        if  vin!=h1['vin'] or h1==ah[-1]:
+            if len(time_y)>1 and len(km_x)>1:
+                total_vin.append([vin, time_y[:],km_x[:],percent[:]])
+            vin = h1['vin']
+            temp_day = ''
+            soma_time = 0
+            soma_km = 0 
+            result = ''
+           
+            time_y.clear()
+            km_x.clear()
+            percent.clear()
+    
+    for i in total_vin:
+        
+        print(i)
+    plot_information(total_vin) 
 
-    with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
+    '''with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
         writer = csv.writer(f)
 
 
         
         # write multiple rows
-        writer.writerows(y1)
-
-class carro_tabela
-    vin 
-    hash
-    co2
-    está no mesmo dia mes e ano 
-    se o tempo está que 15 min o carro está parado inicia uma nova medição
-    total de kilometro percorridos
-    kmfinal
-    {
-    lat_min
-    lon_min
-    lat_max
-    lon_max
-    }
-'''
+        writer.writerows(total_vin) '''          
+         
