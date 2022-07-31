@@ -1,12 +1,13 @@
 class Vehicle_Help():
-    def __init__(self, VIN, HASH,  CO2, DATA, LAT, LON): #, THROTTLE_POS
+    def __init__(self, VIN, HASH,  CO2, DATA, LAT, LON, LEVEL, TEMP): #, THROTTLE_POS
        self.vin = VIN
        self.hash = HASH
        self.co2 = CO2
        self.data = DATA
        self.lat = LAT
        self.lon = LON
-       
+       self.level = LEVEL
+       self.temp = TEMP
 
     def obd_dict__(self):
         # [START_EXCLUDE]
@@ -17,6 +18,8 @@ class Vehicle_Help():
             u'DATA': self.data,
             u'LAT': self.lat,
             u'LON': self.lon,
+            u'LEV': self.level,
+            u'TEMP': self.temp,
            
         }
         return dest
@@ -33,7 +36,8 @@ class Vehicle_Help():
                 DATA={self.data}, \
                 LAT={self.lat}, \
                 LON={self.lon}, \
-                )'
+                LEV={self.level}, \
+                TEMP={self.temp}, \  )'
             )
 
 

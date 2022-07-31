@@ -25,8 +25,7 @@ alldata =  {}
 y = []
 var_vali = True 
 
-connect_tinydb.searchDb()
-
+connect_tinydb.print_veh()
 #alldata = connect_firebase.getDoc()
 #alldata = {'a','b','c'}
 #x = {doc.id: doc.to_dict() for doc in alldata}
