@@ -57,8 +57,8 @@ def plot_information(total_vin):
             plt.grid()
             plt.title("Medida percorrida "+ i[0])
             plt.xlabel("Tempo em segundos(s)")
-            #plt.ylabel("Quilómetros(KM)")
-            plt.ylabel("Porcentagem(KM)")
+            plt.ylabel("Quilómetros(KM)")
+            #plt.ylabel("Porcentagem(KM)")
             #plt.set_ylim([,])
             #plt.xticks(np.arange(,,15))
             #print(i[3])
@@ -85,19 +85,8 @@ def print_veh():
     soma_km = 0
     harv=0
    
-    ''' 
-    with open('carros.csv', 'w', encoding='UTF8', newline='') as f:
-            writer = csv.writer(f)
-
-            
-            # write multiple rows
-            for i in ah:
-                aux = (i['vin'],i['times_tamp'],i['percent'],i['temp_air'])
-                writer.writerow(aux)'''
-
     
     for h1 in ah:
-       
         if temp_day=='':
             temp_day = datetime.strptime(h1['times_tamp'], fmt)
             cord_ant=(h1['lat'],h1['lon'])
@@ -106,17 +95,10 @@ def print_veh():
         time_after = datetime.strptime(h1['times_tamp'], fmt)
         cord_prox=(h1['lat'],h1['lon']) 
 
-        harv_ant = harv
         harv = haversine(cord_ant,cord_prox)
-        #print(harv_ant,harv,harv_ant-harv)
-        if harv-harv_ant!=0: 
-            result =   temp_day - time_after
-           
-           
-            if result.seconds<=60:
-          
-                
-                         
+        if harv>0:    
+            result =   time_after -temp_day 
+            if result.seconds<=60:               
                 if 0 not in km_x:
                     time_y.append(0)   
                     km_x.append(0.0) 
@@ -133,8 +115,7 @@ def print_veh():
             else:  
                 
                 if len(time_y)>1 and len(km_x)>1:
-                    total_vin.append([vin, time_y[:],km_x[:],percent[:]]) 
-                print(total_vin)     
+                    total_vin.append([vin, time_y[:],km_x[:],percent[:]])   
                 vin = h1['vin'] 
                 temp_day = ''
                 soma_time = 0
@@ -172,7 +153,7 @@ def print_veh():
     #for i in total_vin:
     #    if(i[0]=='9BHBG51DAEP106133'):    
     #        print(i)
-    #plot_information(total_vin)
+    plot_information(total_vin)
 
            
          
