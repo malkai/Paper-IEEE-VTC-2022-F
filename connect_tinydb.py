@@ -1,6 +1,7 @@
 from __future__ import annotations
 from concurrent.futures.process import _threads_wakeups
 import csv
+from weakref import proxy
 from tinydb import TinyDB
 import os.path
 import json
@@ -53,23 +54,29 @@ def createDb():
 
 def plot_information(total_vin):
     for i in total_vin:
-            plt.plot(i[1],i[2])
+            print(type(i[3][0]))
+            #i.sort(key=lambda x:(x[3]), reverse=True)
+            
+            print(i[3])
+            
+            plt.plot(i[1],i[3])
             plt.grid()
             plt.title("Medida percorrida "+ i[0])
             plt.xlabel("Tempo em segundos(s)")
-            plt.ylabel("Quilómetros(KM)")
-            #plt.ylabel("Porcentagem(KM)")
+            #plt.ylabel("Quilómetros(KM)")
+            plt.ylabel("Porcentagem(%)")
+            #plt.yticks(range(len(i[3])),i[3])
             #plt.set_ylim([,])
             #plt.xticks(np.arange(,,15))
             #print(i[3])
-            #plt.axis((min(i[1]), max(i[1]), min(i[2]), max(i[2])))
+            #plt.axis((min(i[2]), max(i[2]), min(i[3]), max(i[3])))
             plt.show()
 
 
 def print_veh():
     db = TinyDB('db.json')
     ah = db.all()
-    ah.sort(key=lambda x:(x['vin'], x['times_tamp']), reverse=False)
+    ah.sort(key=lambda x:(x['vin'], x['times_tamp']), reverse=True)
     
     time_y = []
     km_x = []
@@ -84,9 +91,14 @@ def print_veh():
     soma_time = 0 
     soma_km = 0
     harv=0
-   
+    pecent_prox = 0
     
     for h1 in ah:
+        pecent_ant = pecent_prox
+        if(h1['percent']!=''):
+            pecent_prox = float(h1['percent'])
+        else:
+            pecent_prox = 0.0
         if temp_day=='':
             temp_day = datetime.strptime(h1['times_tamp'], fmt)
             cord_ant=(h1['lat'],h1['lon'])
@@ -95,26 +107,32 @@ def print_veh():
         time_after = datetime.strptime(h1['times_tamp'], fmt)
         cord_prox=(h1['lat'],h1['lon']) 
 
-        harv = haversine(cord_ant,cord_prox)
+        harv = haversine(cord_prox,cord_ant)
         if harv>0:    
-            result =   time_after -temp_day 
+            result =    temp_day -time_after
             if result.seconds<=60:               
                 if 0 not in km_x:
                     time_y.append(0)   
                     km_x.append(0.0) 
-                    percent.append(0.0) 
+                    a = 0.0
+                    percent.append(a) 
                 else:
                     soma_km += harv
                     soma_time += result.seconds 
                     time_y.append(soma_time)   
                     km_x.append(soma_km) 
-                    percent.append(h1['percent'])
+                    if pecent_prox!='':
+                        ponto = pecent_prox
+                    elif  pecent_ant!='' :
+                        ponto = pecent_ant 
+                    percent.append(ponto)
                       
                   
            
             else:  
                 
                 if len(time_y)>1 and len(km_x)>1:
+                   
                     total_vin.append([vin, time_y[:],km_x[:],percent[:]])   
                 vin = h1['vin'] 
                 temp_day = ''
@@ -125,11 +143,16 @@ def print_veh():
                 km_x.clear()
                 percent.clear()
         else:  
+            
             result =   temp_day - time_after
             soma_time += result.seconds 
             time_y.append(soma_time)   
             km_x.append(soma_km) 
-            percent.append(h1['percent'])
+            if pecent_prox!='':
+                ponto = pecent_prox
+            elif  pecent_ant!='' :
+                ponto = pecent_ant  
+            percent.append(ponto)
                       
                   
            
@@ -151,8 +174,8 @@ def print_veh():
             percent.clear()
     
     #for i in total_vin:
-    #    if(i[0]=='9BHBG51DAEP106133'):    
-    #        print(i)
+          
+    #    print(i)
     plot_information(total_vin)
 
            
