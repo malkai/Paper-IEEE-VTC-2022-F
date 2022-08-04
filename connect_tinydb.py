@@ -51,13 +51,14 @@ def createDb():
             db.insert({'vin':doc.vin,'hash':doc.hash,'co2':doc.co2,'times_tamp':doc.data,'lat':doc.lat,'lon':doc.lon, 'percent':doc.level, 'temp_air':doc.temp})
           
 
-
+#nomralizar pelo volume do veiculo
+#ajuste linear
 def plot_information(total_vin):
     for i in total_vin:
-            print(type(i[3][0]))
+            #print(type(i[3][0]))
             #i.sort(key=lambda x:(x[3]), reverse=True)
             
-            print(i[3])
+            #print(i[3])
             
             plt.plot(i[1],i[3])
             plt.grid()
@@ -129,7 +130,12 @@ def print_veh():
                       
                   
            
-            else:  
+            else:
+                if 0 not in km_x or 0 not in time_y:
+                    time_y.append(0)   
+                    km_x.append(0.0) 
+                    a = 0.0
+                    percent.append(a)   
                 
                 if len(time_y)>1 and len(km_x)>1:
                    
@@ -161,6 +167,7 @@ def print_veh():
                 
         
         if  vin!=h1['vin'] or h1==ah[-1]:
+           
             if len(time_y)>1 and len(km_x)>1:
                 total_vin.append([vin, time_y[:],km_x[:],percent[:]])
             vin = h1['vin']
@@ -173,10 +180,10 @@ def print_veh():
             km_x.clear()
             percent.clear()
     
-    #for i in total_vin:
+    for i in total_vin:
           
-    #    print(i)
-    plot_information(total_vin)
+        print(i[1])
+    #plot_information(total_vin)
 
            
          
